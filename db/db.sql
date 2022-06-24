@@ -1,0 +1,2 @@
+IF EXISTS DROP DATABASE employees;
+CREATE DATABASE employees;
