@@ -37,6 +37,33 @@ function promptOptions() {
 }
 
 function addEmployee() {
+  var employeeList = ['None'];
+  let sql = 'SELECT first_name, last_name FROM employee';
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.log(err);
+    }
+    else {
+      console.log(result);
+      for (let i = 0; i < result.length; i++) {
+        employeeList.push(result[i].name);
+      }
+    }
+  })
+
+  var roleList = [];
+  sql = 'SELECT title FROM role';
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.log(err);
+    }
+    else {
+      for (let i = 0; i < result.length; i++) {
+        roleList.push(result[i].title);
+      }
+    }
+  })
+  
   inquirer.prompt([
     {
       type: 'input',
@@ -46,15 +73,27 @@ function addEmployee() {
     {
       type: 'input',
       name: 'last_name',
-      message: 'What is your employees last name?'
+      message: 'What is your employees last name?',
     },
     {
-      type: 'input',
+      type: 'list',
       name: 'role',
-      message: 'what is your employees role?'
+      message: 'What is your employees role?',
+      choices: roleList,
     },
-    
+    {
+      type: 'list',
+      name: 'manager',
+      message: 'Who is your employees manager?',
+      choices: employeeList,
+    }
+
   ]).then(values => {
+    if (values.manager == 'None') {
+      values.manager = null;
+    }
+
+
     let params = [values.first_name, values.last_name];
     db.query('INSERT INTO employee (first_name, last_name) VALUES(?,?)', params, (err, result) => {
       if (err) throw err;
@@ -65,6 +104,45 @@ function addEmployee() {
     })
   })
 
+}
+
+function addRole() {
+  var departmentNames = [];
+  db.query('SELECT name FROM departments', (err, results) => {
+    if (err) {
+      console.log(err);
+    }
+    else {
+      for (let i = 0; i < results.length; i++) {
+        departmentNames.push(results[i].name);
+      }
+    }
+  })
+  
+  inquirer.prompt([
+    {
+      type: 'input',
+      name: 'title',
+      message: 'What is the title of the role?'
+    },
+    {
+      type: 'input',
+      name: 'salary',
+      message: 'What is the salary of the role?'
+    },
+    {
+      type: 'list',
+      name: 'department_name',
+      message: 'What department does this role belong to?',
+      choices: departmentNames
+    }
+  ]).then(answers => {
+    console.log(answers.departmentName);
+    let params = [answers.title, answers.salary,]
+    db.query('INSERT INTO role (title, salary, department_id) VALUES(?,?,?)' )
+
+    menu();
+  })
 }
 
 function allEmployees() {
@@ -94,6 +172,7 @@ async function menu() {
 
     case "Add Employee":
       // Add Employee to database
+      addEmployee();
       break;
 
     case "Update Employee Role":
@@ -106,6 +185,7 @@ async function menu() {
 
     case "Add Role":
       // Add role to database
+      addRole();
       break;
 
     case "View All Departments":
@@ -116,6 +196,7 @@ async function menu() {
     case "View All Employees":
       // Show table with all employees
       allEmployees();
+      // All Employee function finished
       break;
 
     case "Add Department":
@@ -128,6 +209,17 @@ async function menu() {
   }
 }
 
-var choice;
+var choice = '';
 
 menu();
+
+
+// var array = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+
+// var newArray = [];
+
+// for (let i = 0; i < array.length; i++) {
+//   newArray.push(array[i]);
+// }
+
+// console.log(newArray);
