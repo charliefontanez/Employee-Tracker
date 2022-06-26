@@ -4,12 +4,34 @@ const mysql = require("mysql2");
 const db = require("./db/connection");
 var quit = false;
 
-function allDepartments() {
+function viewAllDepartments() {
   db.query("SELECT * FROM departments", function (err, results) {
     if (err) {
       console.log(err);
     } else {
       console.log("\n");
+      console.table(results);
+      menu();
+    }
+  });
+}
+
+function viewAllRoles() {
+  let sql = 
+  `
+  SELECT role.id, role.title, departments.name AS department, role.salary
+  FROM role 
+  INNER JOIN departments 
+  ON role.department_id = departments.id
+  ORDER BY id;
+  `
+
+  db.query(sql, function (err, results) {
+    if (err) {
+      console.log(err);
+    }
+    else {
+      console.log('\n');
       console.table(results);
       menu();
     }
@@ -107,18 +129,21 @@ function addEmployee() {
 }
 
 function addRole() {
-  var departmentNames = [];
-  db.query('SELECT name FROM departments', (err, results) => {
+  let departmentNames = [];
+  let departments = [];
+  db.query('SELECT * FROM departments', (err, results) => {
     if (err) {
       console.log(err);
     }
     else {
+      departments = results;
+      console.log(departments);
       for (let i = 0; i < results.length; i++) {
         departmentNames.push(results[i].name);
       }
     }
-  })
-  
+  });
+
   inquirer.prompt([
     {
       type: 'input',
@@ -137,16 +162,23 @@ function addRole() {
       choices: departmentNames
     }
   ]).then(answers => {
-    console.log(answers.departmentName);
-    let params = [answers.title, answers.salary,]
-    db.query('INSERT INTO role (title, salary, department_id) VALUES(?,?,?)' )
+    for (let i = 0; i < departments.length; i++) {
+      if (departments[i].name == answers.department_name) {
+        answers.department_id = departments[i].id;
+        break;
+      }
+    }
+    
+    let params = [answers.title, answers.salary, answers.department_id]
+    db.query('INSERT INTO role (title, salary, department_id) VALUES(?,?,?)', params, (err) => {
+      if (err) throw err;
+    });
 
     menu();
   })
 }
 
-function allEmployees() {
-  
+function viewAllEmployees() {
   db.query('SELECT * FROM employee', function(err, result) {
     if (err) {
       console.log(err);
@@ -180,7 +212,7 @@ async function menu() {
       break;
 
     case "View All Roles":
-      // Query Database for all roles
+      viewAllRoles();
       break;
 
     case "Add Role":
@@ -189,14 +221,11 @@ async function menu() {
       break;
 
     case "View All Departments":
-      // Show table with all departments
-      allDepartments();
+      viewAllDepartments();
       break;
 
     case "View All Employees":
-      // Show table with all employees
-      allEmployees();
-      // All Employee function finished
+      viewAllEmployees();
       break;
 
     case "Add Department":
@@ -212,14 +241,3 @@ async function menu() {
 var choice = '';
 
 menu();
-
-
-// var array = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
-
-// var newArray = [];
-
-// for (let i = 0; i < array.length; i++) {
-//   newArray.push(array[i]);
-// }
-
-// console.log(newArray);
