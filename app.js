@@ -5,7 +5,7 @@ const db = require("./db/connection");
 const { query, promise } = require("./db/connection");
 var quit = false;
 var choice = '';
-// menu();
+menu();
 
 // let sqlQuery = async function() {
 //   return new Promise((resolve, reject) => {
@@ -87,65 +87,24 @@ function promptOptions() {
   ]);
 }
 
-viewAllEmployees();
 
-async function viewAllEmployees() {
-  let sql = `SELECT e.id, e.first_name, e.last_name, role.title AS role, role.salary, departments.name AS department
+function viewAllEmployees() {
+  let sql = `SELECT e.id, e.first_name, e.last_name, role.title AS title, role.salary, departments.name AS department,
+              CONCAT(manager.first_name, ' ', manager.last_name) AS manager
              FROM employee e
+             LEFT JOIN employee manager on manager.id = e.manager_id
              LEFT JOIN role ON e.role_id = role.id
              LEFT JOIN departments ON role.department_id = departments.id`;
+    // This took a long time to figure out
 
-
-
-
-
-
-
-
-  var employeeQuery = () => {
-    return new Promise (function (resolve, reject) {
-      db.query('SELECT * FROM employee', function(err, result) {
-        if (err) {
-          return reject(err);
-        }
-        else {
-          return resolve(result);
-        }
-      });
-    });
-  };
-  var roleQuery = () => {
-    return new Promise (function (resolve, reject) {
-      db.query('Select * From role', function(err, result) {
-        if (err) {
-          return reject(err);
-        }
-        else {
-          return resolve(result);
-        }
-      });
-    });
-  };
-  var departmentQuery = () => {
-    return new Promise (function (resolve, reject) {
-      db.query('SELECT * FROM departments', function(err, result) {
-        if (err) {
-          return reject(err);
-        }
-        else {
-          return resolve(result);
-        }
-      });
-    });
-  };
-
-  var employeeTable = await employeeQuery();
-  var roleTable = await roleQuery();
-  var departmentTable = await departmentQuery();
-
-  console.log(employeeTable);
-  console.table(employeeTable);
-
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.log(err);
+    }
+    else {
+      console.table(result);
+    }
+  });
 }
 
 async function updateEmployeeRole() {
@@ -160,6 +119,7 @@ async function updateEmployeeRole() {
     })
     });
   };
+
   //   db.query(sql, (err, result) => {
   //     if (err) {
   //       console.log(err);
@@ -267,6 +227,7 @@ function addEmployee() {
   var employeeList = ['None'];
   var employeeQuery = [];
   let sql = 'SELECT * FROM employee';
+
   db.query(sql, (err, result) => {
     if (err) {
       console.log(err);
@@ -279,9 +240,12 @@ function addEmployee() {
     }
   });
 
+
+
   var roleList = [];
   var roleData = [];
   sql = 'SELECT * FROM role';
+
   db.query(sql, (err, result) => {
     if (err) {
       console.log(err);
@@ -319,13 +283,16 @@ function addEmployee() {
     }
 
   ]).then(values => {
+
     if (values.manager == 'None') {
       values.manager = null;
     }
     else {
       var fullName = '';
+
       for (i = 0; i < employeeQuery.length; i++) {
         fullName = employeeQuery[i].first_name + ' ' + employeeQuery[i].last_name;
+
         if (values.manager == fullName) {
           values.manager_id = employeeQuery[i].id;
           break;
@@ -340,7 +307,9 @@ function addEmployee() {
       }
     }
 
-    let params = [values.first_name, values.last_name, values.role_id, values.manager_id];
+    let { first_name, last_name, role_id, manager_id } = values;
+
+    let params = [first_name, last_name, role_id, manager_id];
     db.query('INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES(?,?,?,?)', params, (err) => {
       if (err) {
         console.log(err);
