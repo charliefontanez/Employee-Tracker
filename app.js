@@ -74,6 +74,84 @@ function viewAllEmployees() {
   })
 }
 
+function updateEmployeeRole() {
+  let sql = 'SELECT * FROM role';
+  let roleQuery = [];
+  var roles = [];
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.log(err);
+    }
+    else {
+      roleQuery = result;
+      for (i = 0; i < roleQuery.length; i++) {
+        roles.push(roleQuery[i].title);
+      }
+    }
+  });
+
+  sql = `SELECT * FROM employee`;
+  let employeeList = [];
+  let employeeQuery = [];
+  var fullName;
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.log(err);
+    }
+    else {
+      employeeQuery = result;
+      for (i = 0; i < result.length; i++) {
+        fullName = result[i].first_name + ' ' + result[i].last_name;
+        employeeList.push(fullName);
+      }
+      
+    }
+  });
+
+  inquirer.prompt([
+    {
+      type: 'list',
+      name: 'employee',
+      message: 'What employee would you like to update?',
+      choices: employeeList
+    },
+    {
+      type: 'list',
+      name: 'role',
+      message: 'What role would you like the employee to have?',
+      choices: roles
+    }
+  ]).then(response => {
+
+    for (i = 0; i < roleQuery.length; i++) {
+      if (response.role == roleQuery[i].title) {
+        response.role_id = roleQuery[i].title;
+        break;
+      }
+    }
+
+    for (i = 0; i < employeeQuery.length; i++) {
+      fullName = employeeQuery[i].first_name + ' ' + employeeQuery[i].last_name;
+      if (response.employee == fullName) {
+        response.employee_id = employeeQuery[i].id;
+        break;
+      }
+    }
+
+    params = [response.role_id, response.employee_id];
+    sql = 'UPDATE employee SET role_id = ? WHERE employee.id = ?';
+    db.query(sql, params, (err) => {
+      if (err) {
+        console.log(err);
+      }
+      else {
+        console.log('Employee Role Updated');
+        menu();
+      }
+    });
+  });
+}
+
 function addEmployee() {
   var employeeList = ['None'];
   var employeeQuery = [];
@@ -247,7 +325,6 @@ async function menu() {
       break;
 
     case "Add Employee":
-      // Add Employee to database
       addEmployee();
       break;
 
@@ -273,7 +350,6 @@ async function menu() {
       break;
 
     case "Add Department":
-      // Add department to database
       addDepartment();
       break;
 
