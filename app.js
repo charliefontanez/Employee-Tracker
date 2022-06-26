@@ -2,9 +2,35 @@ const inquirer = require("inquirer");
 const cTable = require("console.table");
 const mysql = require("mysql2");
 const db = require("./db/connection");
+const { query, promise } = require("./db/connection");
 var quit = false;
 var choice = '';
 menu();
+
+// let sqlQuery = async function() {
+//   return new Promise((resolve, reject) => {
+//     db.query('SELECT * FROM role', (error, results) => {
+//       if (error) {
+//         return reject(error);
+//       }
+//       else {
+//         return resolve(results);
+//       }
+//     });
+//   });
+// }
+// var y = await sqlQuery();
+// console.log(y);
+
+// console.log('should come after\n');
+
+
+
+// async function myFunction() {
+  
+// }
+
+// myFunction();
 
 function viewAllDepartments() {
   db.query("SELECT * FROM departments", function (err, results) {
@@ -74,39 +100,76 @@ function viewAllEmployees() {
   })
 }
 
-function updateEmployeeRole() {
+async function updateEmployeeRole() {
   let sql = 'SELECT * FROM role';
-  let roleQuery = [];
-  var roles = [];
-  db.query(sql, (err, result) => {
-    if (err) {
-      console.log(err);
-    }
-    else {
-      roleQuery = result;
-      for (i = 0; i < roleQuery.length; i++) {
-        roles.push(roleQuery[i].title);
+  var roleTableQuery = function() {
+    return new Promise (function (resolve, reject) {
+    db.query('SELECT * FROM role', (error, result) => {
+      if (error) {
+        return reject(error);
       }
-    }
-  });
+      return resolve(result);
+    })
+    });
+  };
+  //   db.query(sql, (err, result) => {
+  //     if (err) {
+  //       console.log(err);
+  //     }
+  //     // else {
+  //     //   roleQuery = result;
+  //     //   for (i = 0; i < roleQuery.length; i++) {
+  //     //     roles.push(roleQuery[i].title);
+  //     //   }
+  //     // }
+  //     console.log('Query worked');
+  //   });
+  // }
+
+  let roleQuery = await roleTableQuery();
+  console.log(roleQuery);
+  console.log('Should come after\n');
+  var roles = [];
+  for (i = 0; i < roleQuery.length; i++) {
+    roles.push(roleQuery[i].title);
+  }
 
   sql = `SELECT * FROM employee`;
+  var employeeTableQuery = function() {
+    return new Promise (function(resolve, reject) {
+      db.query(sql, (error, results) => {
+        if (error) {
+          return reject(error);
+        }
+        return resolve(results);
+      });
+    });
+  };
+
+  let employeeQuery = await employeeTableQuery();
+  console.log(employeeQuery);
+  console.log('SHould come after\n');
+
   let employeeList = [];
-  let employeeQuery = [];
   var fullName;
-  db.query(sql, (err, result) => {
-    if (err) {
-      console.log(err);
-    }
-    else {
-      employeeQuery = result;
-      for (i = 0; i < result.length; i++) {
-        fullName = result[i].first_name + ' ' + result[i].last_name;
-        employeeList.push(fullName);
-      }
+  for (i = 0; i < employeeQuery.length; i++) {
+    fullName = employeeQuery[i].first_name + ' ' + employeeQuery[i].last_name;
+    employeeList.push(fullName);
+  }
+
+  // db.query(sql, (err, result) => {
+  //   if (err) {
+  //     console.log(err);
+  //   }
+  //   else {
+  //     employeeQuery = result;
+  //     for (i = 0; i < result.length; i++) {
+  //       fullName = result[i].first_name + ' ' + result[i].last_name;
+  //       employeeList.push(fullName);
+  //     }
       
-    }
-  });
+  //   }
+  // });
 
   inquirer.prompt([
     {
@@ -125,7 +188,7 @@ function updateEmployeeRole() {
 
     for (i = 0; i < roleQuery.length; i++) {
       if (response.role == roleQuery[i].title) {
-        response.role_id = roleQuery[i].title;
+        response.role_id = roleQuery[i].id;
         break;
       }
     }
@@ -329,7 +392,6 @@ async function menu() {
       break;
 
     case "Update Employee Role":
-      // Update Employee Role in database
       updateEmployeeRole();
       break;
 
