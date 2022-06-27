@@ -26,3 +26,7 @@ Set up the connection.js folder to link to your database. The password used may 
 
 
 
+
+
+https://user-images.githubusercontent.com/97649021/175839991-fef2407a-29ad-435d-b5b5-72ae51060c6a.mp4
+
