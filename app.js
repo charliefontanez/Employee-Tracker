@@ -102,7 +102,9 @@ function viewAllEmployees() {
       console.log(err);
     }
     else {
+      console.log('\n');
       console.table(result);
+      menu();
     }
   });
 }
@@ -135,8 +137,6 @@ async function updateEmployeeRole() {
   // }
 
   let roleQuery = await roleTableQuery();
-  console.log(roleQuery);
-  console.log('Should come after\n');
   var roles = [];
   for (i = 0; i < roleQuery.length; i++) {
     roles.push(roleQuery[i].title);
@@ -155,8 +155,6 @@ async function updateEmployeeRole() {
   };
 
   let employeeQuery = await employeeTableQuery();
-  console.log(employeeQuery);
-  console.log('SHould come after\n');
 
   let employeeList = [];
   var fullName;
@@ -393,9 +391,8 @@ function addRole() {
 }
 
 async function menu() {
+  
   choice = await promptOptions();
-
-  console.log(choice);
 
   switch (choice.options) {
     case "Quit":
